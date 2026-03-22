@@ -1,0 +1,1784 @@
+/* ========================================
+   MARCH MADNESS WITH SKILL
+   Basketball Color Palette & Styling
+   ======================================== */
+
+:root {
+  --ball-orange: #E35205;
+  --ball-orange-light: #FF6B1A;
+  --ball-dark: #B8420A;
+  --leather: #C8842A;
+  --leather-light: #D4A76A;
+  --court-wood: #D4A76A;
+  --court-dark: #8B6914;
+  --navy: #1A1A2E;
+  --navy-light: #16213E;
+  --deep-dark: #0F0F23;
+  --white: #FFFFFF;
+  --off-white: #F0E6D3;
+  --success: #2ECC71;
+  --danger: #E74C3C;
+  --warning: #F39C12;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0A89E;
+  --text-muted: #6B6560;
+  --glass-bg: rgba(26, 26, 46, 0.85);
+  --glass-border: rgba(227, 82, 5, 0.2);
+  --card-bg: rgba(22, 33, 62, 0.9);
+  --shadow-glow: 0 0 40px rgba(227, 82, 5, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--deep-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* ========================================
+   BASKETBALL BACKGROUND
+   ======================================== */
+
+.bg-court {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg-court::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(227, 82, 5, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(200, 132, 42, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(227, 82, 5, 0.04) 0%, transparent 40%),
+    linear-gradient(180deg, var(--deep-dark) 0%, #0D0D1F 50%, var(--deep-dark) 100%);
+}
+
+.bg-court .court-line {
+  position: absolute;
+  border: 1px solid rgba(227, 82, 5, 0.06);
+  border-radius: 50%;
+}
+
+.bg-court .court-line:nth-child(1) {
+  width: 400px;
+  height: 400px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bg-court .court-line:nth-child(2) {
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bg-court .court-line:nth-child(3) {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background: rgba(227, 82, 5, 0.04);
+  top: 50%;
+  border-radius: 0;
+}
+
+/* Floating basketball particles */
+.particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========================================
+   HERO / HOME SCREEN
+   ======================================== */
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  text-align: center;
+}
+
+.hero-basketball {
+  width: 180px;
+  height: 180px;
+  margin-bottom: 2rem;
+  position: relative;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.hero-basketball svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 20px 40px rgba(227, 82, 5, 0.4));
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.hero-basketball::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(227, 82, 5, 0.3), transparent);
+  border-radius: 50%;
+  animation: shadow-bounce 2s ease-in-out infinite;
+}
+
+@keyframes shadow-bounce {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+  50% { transform: translateX(-50%) scale(0.6); opacity: 0.2; }
+}
+
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: 4px;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--ball-orange) 0%, var(--leather) 50%, var(--ball-orange-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+}
+
+.hero h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  letter-spacing: 8px;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-weight: 400;
+}
+
+.hero p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin-bottom: 3rem;
+  line-height: 1.6;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--ball-orange) 0%, var(--ball-dark) 100%);
+  color: var(--white);
+  box-shadow: 0 4px 20px rgba(227, 82, 5, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(227, 82, 5, 0.6);
+}
+
+.btn-secondary {
+  background: var(--glass-bg);
+  color: var(--ball-orange);
+  border: 2px solid var(--ball-orange);
+}
+
+.btn-secondary:hover {
+  background: rgba(227, 82, 5, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
+}
+
+.btn-lg {
+  padding: 1.1rem 3rem;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success), #27AE60);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger), #C0392B);
+  color: var(--white);
+}
+
+.btn-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ========================================
+   CARDS & PANELS
+   ======================================== */
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(227, 82, 5, 0.4);
+  box-shadow: var(--shadow-glow);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(227, 82, 5, 0.1);
+}
+
+.card-header h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  color: var(--ball-orange);
+}
+
+/* ========================================
+   NAVIGATION / HEADER
+   ======================================== */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15, 15, 35, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-header .logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--ball-orange), var(--leather));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  cursor: pointer;
+}
+
+.app-header .logo .ball-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(26, 26, 46, 0.5);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.nav-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: rgba(227, 82, 5, 0.1);
+}
+
+.nav-tab.active {
+  color: var(--white);
+  background: var(--ball-orange);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ball-orange), var(--leather));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.user-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--ball-orange);
+  letter-spacing: 1px;
+}
+
+/* ========================================
+   LAYOUT
+   ======================================== */
+
+.main-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(15, 15, 35, 0.8);
+  border: 2px solid rgba(227, 82, 5, 0.15);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--ball-orange);
+  box-shadow: 0 0 20px rgba(227, 82, 5, 0.15);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ========================================
+   TEAM SELECTION
+   ======================================== */
+
+.region-header {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 3px;
+  color: var(--ball-orange);
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(227, 82, 5, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.region-header .region-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.7;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.team-card {
+  background: var(--card-bg);
+  border: 2px solid rgba(227, 82, 5, 0.1);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.team-card:hover {
+  border-color: var(--ball-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(227, 82, 5, 0.2);
+}
+
+.team-card.selected {
+  border-color: var(--ball-orange);
+  background: rgba(227, 82, 5, 0.15);
+  box-shadow: 0 0 30px rgba(227, 82, 5, 0.2);
+}
+
+.team-seed {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(227, 82, 5, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--ball-orange);
+  flex-shrink: 0;
+}
+
+.team-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.team-conference {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ========================================
+   DASHBOARD
+   ======================================== */
+
+.round-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.round-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 90px;
+  position: relative;
+}
+
+.round-step::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: -50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(227, 82, 5, 0.15);
+}
+
+.round-step:last-child::after {
+  display: none;
+}
+
+.round-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(26, 26, 46, 0.8);
+  border: 2px solid rgba(227, 82, 5, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  z-index: 1;
+  transition: all 0.3s;
+}
+
+.round-step.completed .round-dot {
+  background: var(--ball-orange);
+  border-color: var(--ball-orange);
+}
+
+.round-step.completed::after {
+  background: var(--ball-orange);
+}
+
+.round-step.active .round-dot {
+  border-color: var(--ball-orange);
+  box-shadow: 0 0 15px rgba(227, 82, 5, 0.5);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 15px rgba(227, 82, 5, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(227, 82, 5, 0.8); }
+}
+
+.round-step.eliminated .round-dot {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: var(--danger);
+}
+
+.round-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.round-step.active .round-label,
+.round-step.completed .round-label {
+  color: var(--ball-orange);
+}
+
+/* ========================================
+   PREDICTION PANEL
+   ======================================== */
+
+.prediction-panel {
+  background: var(--card-bg);
+  border: 2px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.matchup-display {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.matchup-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.matchup-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.matchup-team .seed-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(227, 82, 5, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--ball-orange);
+}
+
+.matchup-team .team-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.matchup-team.user-team .team-label {
+  color: var(--ball-orange);
+}
+
+.matchup-vs {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--text-muted);
+  letter-spacing: 4px;
+}
+
+.prediction-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+  .prediction-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prediction-field {
+  background: rgba(15, 15, 35, 0.6);
+  border: 1px solid rgba(227, 82, 5, 0.1);
+  border-radius: 14px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.prediction-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.prediction-field .helper-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.number-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.number-input button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--ball-orange);
+  background: none;
+  color: var(--ball-orange);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.number-input button:hover {
+  background: var(--ball-orange);
+  color: var(--white);
+}
+
+.number-input input {
+  width: 80px;
+  text-align: center;
+  background: none;
+  border: none;
+  color: var(--white);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  outline: none;
+  letter-spacing: 2px;
+}
+
+.number-input input::-webkit-inner-spin-button,
+.number-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.will-advance-toggle {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.toggle-btn {
+  padding: 0.75rem 2rem;
+  border: 2px solid rgba(227, 82, 5, 0.2);
+  border-radius: 12px;
+  background: none;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toggle-btn.win {
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
+.toggle-btn.lose {
+  border-color: rgba(231, 76, 60, 0.3);
+}
+
+.toggle-btn.win.active {
+  background: rgba(46, 204, 113, 0.15);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.toggle-btn.lose.active {
+  background: rgba(231, 76, 60, 0.15);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* ========================================
+   LEADERBOARD
+   ======================================== */
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+}
+
+.leaderboard-table th {
+  text-align: left;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.leaderboard-table td {
+  padding: 0.85rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid transparent;
+}
+
+.leaderboard-table tr td:first-child {
+  border-radius: 12px 0 0 12px;
+}
+
+.leaderboard-table tr td:last-child {
+  border-radius: 0 12px 12px 0;
+}
+
+.leaderboard-table tr:hover td {
+  border-color: rgba(227, 82, 5, 0.2);
+  background: rgba(22, 33, 62, 0.95);
+}
+
+.leaderboard-table tr.current-user td {
+  border-color: var(--ball-orange);
+  background: rgba(227, 82, 5, 0.1);
+}
+
+.rank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  color: var(--ball-orange);
+  width: 50px;
+  text-align: center;
+}
+
+.rank-1 { color: #FFD700; }
+.rank-2 { color: #C0C0C0; }
+.rank-3 { color: #CD7F32; }
+
+.rank-change {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rank-up { color: var(--success); }
+.rank-down { color: var(--danger); }
+.rank-same { color: var(--text-muted); }
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player-team-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(227, 82, 5, 0.1);
+  color: var(--ball-orange);
+  font-weight: 600;
+}
+
+.score-cell {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--ball-orange);
+  letter-spacing: 1px;
+}
+
+.status-active {
+  color: var(--success);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-eliminated {
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: line-through;
+}
+
+/* ========================================
+   MESSAGING
+   ======================================== */
+
+.messages-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 1rem;
+  height: calc(100vh - 200px);
+  min-height: 500px;
+}
+
+@media (max-width: 768px) {
+  .messages-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+.players-list {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.players-list-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  color: var(--ball-orange);
+}
+
+.player-list-item {
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 1px solid rgba(227, 82, 5, 0.05);
+}
+
+.player-list-item:hover,
+.player-list-item.active {
+  background: rgba(227, 82, 5, 0.1);
+}
+
+.player-list-item .unread-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ball-orange);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.chat-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--glass-border);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chat-message {
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.chat-message.sent {
+  background: var(--ball-orange);
+  color: var(--white);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.received {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid var(--glass-border);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-message .msg-sender {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ball-orange);
+  margin-bottom: 0.25rem;
+}
+
+.chat-message.sent .msg-sender {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.chat-message .msg-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.chat-message.sent .msg-time {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.chat-input-area {
+  padding: 1rem;
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(227, 82, 5, 0.15);
+  border-radius: 12px;
+  background: rgba(15, 15, 35, 0.8);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.chat-input-area input:focus {
+  border-color: var(--ball-orange);
+}
+
+.chat-input-area button {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: var(--ball-orange);
+  color: var(--white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.chat-input-area button:hover {
+  background: var(--ball-orange-light);
+}
+
+/* group chat */
+.chat-panel.group-chat .chat-messages {
+  /* group messages are all "received" style except your own */
+}
+
+/* ========================================
+   RESULTS / SCORE BREAKDOWN
+   ======================================== */
+
+.result-card {
+  border: 2px solid;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-card.win {
+  border-color: rgba(46, 204, 113, 0.3);
+  background: rgba(46, 204, 113, 0.05);
+}
+
+.result-card.loss {
+  border-color: rgba(231, 76, 60, 0.3);
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.result-round {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  color: var(--text-secondary);
+}
+
+.result-outcome {
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.result-outcome.win {
+  background: rgba(46, 204, 113, 0.15);
+  color: var(--success);
+}
+
+.result-outcome.loss {
+  background: rgba(231, 76, 60, 0.15);
+  color: var(--danger);
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.score-item {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(15, 15, 35, 0.5);
+}
+
+.score-item .score-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.score-item .score-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  color: var(--ball-orange);
+}
+
+.score-item .score-detail {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.accuracy-bar {
+  height: 6px;
+  background: rgba(227, 82, 5, 0.1);
+  border-radius: 3px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.accuracy-bar .fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+
+.accuracy-bar .fill.excellent { background: var(--success); }
+.accuracy-bar .fill.good { background: var(--ball-orange); }
+.accuracy-bar .fill.average { background: var(--warning); }
+.accuracy-bar .fill.poor { background: var(--danger); }
+
+/* ========================================
+   MODAL
+   ======================================== */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--navy);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+  color: var(--ball-orange);
+  margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   ADMIN PANEL (Results Entry)
+   ======================================== */
+
+.admin-section {
+  background: rgba(231, 76, 60, 0.05);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.admin-section h3 {
+  color: var(--danger);
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  margin-bottom: 1rem;
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 300;
+}
+
+/* ========================================
+   SCROLLBAR
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(227, 82, 5, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(227, 82, 5, 0.5);
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: var(--navy);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: slideInRight 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 350px;
+}
+
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+.toast.info { border-color: var(--ball-orange); }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ========================================
+   ELIMINATED OVERLAY
+   ======================================== */
+
+.eliminated-overlay {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.eliminated-overlay h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  color: var(--danger);
+  letter-spacing: 3px;
+  margin-bottom: 1rem;
+}
+
+.eliminated-overlay p {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* ========================================
+   INVITE CODE
+   ======================================== */
+
+.invite-code {
+  background: rgba(15, 15, 35, 0.8);
+  border: 2px dashed var(--ball-orange);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  margin: 1rem 0;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.invite-code:hover {
+  background: rgba(227, 82, 5, 0.1);
+}
+
+.invite-code .code {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 6px;
+  color: var(--ball-orange);
+}
+
+.invite-code .hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ========================================
+   EMPTY STATES
+   ======================================== */
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.empty-state svg {
+  width: 80px;
+  height: 80px;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  font-size: 0.95rem;
+}
+
+/* ========================================
+   LEAGUE CODE INPUT
+   ======================================== */
+.code-input-group {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.code-input-group input {
+  flex: 1;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+/* ========================================
+   MOBILE BOTTOM NAV
+   ======================================== */
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(15, 15, 35, 0.97);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  padding: 0.4rem 0.25rem;
+  padding-bottom: env(safe-area-inset-bottom, 0.4rem);
+}
+
+.mobile-nav-items {
+  display: flex;
+  justify-content: space-around;
+}
+
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  border-radius: 8px;
+  min-width: 48px;
+  min-height: 44px;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mobile-nav-btn.active {
+  color: var(--ball-orange);
+  background: rgba(227, 82, 5, 0.1);
+}
+
+.mobile-nav-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ========================================
+   SHARE SHEET
+   ======================================== */
+
+.share-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.2rem;
+  border: 2px solid var(--glass-border);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+
+.share-btn:hover, .share-btn:active {
+  border-color: var(--ball-orange);
+  color: var(--ball-orange);
+  background: rgba(227, 82, 5, 0.05);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .messages-container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .players-list {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Show mobile bottom nav, hide top nav tabs */
+  .mobile-nav {
+    display: block;
+  }
+
+  .nav-tabs {
+    display: none !important;
+  }
+
+  .app-header {
+    padding: 0.6rem 1rem;
+  }
+
+  /* Add bottom padding so content doesn't hide behind nav */
+  .main-content {
+    padding: 1rem;
+    padding-bottom: 5rem;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 1.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+
+  .hero h2 {
+    font-size: 1.1rem;
+    letter-spacing: 5px;
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+  }
+
+  .hero-basketball {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* Buttons — bigger touch targets */
+  .btn {
+    min-height: 48px;
+    padding: 0.85rem 1.5rem;
+  }
+
+  .btn-lg {
+    min-height: 52px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+
+  .btn-sm {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
+
+  /* Team cards — bigger touch targets */
+  .team-card {
+    padding: 1rem;
+    min-height: 56px;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  /* Prediction panel */
+  .prediction-panel {
+    padding: 1.25rem;
+  }
+
+  .prediction-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .matchup-teams {
+    gap: 0.75rem;
+  }
+
+  .matchup-vs {
+    font-size: 1.3rem;
+  }
+
+  .matchup-team .team-label {
+    font-size: 0.95rem;
+  }
+
+  /* Number inputs — bigger */
+  .number-input button {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+  }
+
+  .number-input input {
+    width: 90px;
+    font-size: 2.2rem;
+  }
+
+  /* Toggle buttons */
+  .toggle-btn {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.9rem;
+    min-height: 48px;
+  }
+
+  .will-advance-toggle {
+    gap: 0.75rem;
+  }
+
+  /* Score breakdown — keep 3 cols but smaller */
+  .score-breakdown {
+    gap: 0.5rem;
+  }
+
+  .score-item {
+    padding: 0.5rem;
+  }
+
+  .score-item .score-value {
+    font-size: 1.2rem;
+  }
+
+  /* Leaderboard — simplified for mobile */
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .leaderboard-table .rank {
+    font-size: 1.1rem;
+    width: auto;
+  }
+
+  .score-cell {
+    font-size: 1.2rem !important;
+  }
+
+  /* Cards */
+  .card {
+    padding: 1.1rem;
+  }
+
+  /* Result cards */
+  .result-card {
+    padding: 1.1rem;
+  }
+
+  /* Invite code */
+  .invite-code {
+    padding: 1rem;
+  }
+
+  .invite-code .code {
+    font-size: 1.8rem;
+    letter-spacing: 5px;
+  }
+
+  /* Chat */
+  .chat-input-area input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .chat-input-area button {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* Admin inputs */
+  .admin-section .form-input {
+    min-height: 44px;
+  }
+
+  /* Region header */
+  .region-header {
+    font-size: 1.4rem;
+  }
+
+  /* Round progress */
+  .round-progress {
+    gap: 0;
+    justify-content: space-between;
+  }
+
+  .round-step {
+    min-width: auto;
+    flex: 1;
+  }
+
+  .round-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.6rem;
+  }
+
+  .round-label {
+    font-size: 0.55rem;
+  }
+
+  /* Form inputs */
+  .form-input {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .score-breakdown {
+    grid-template-columns: 1fr;
+  }
+}
