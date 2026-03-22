@@ -11,31 +11,45 @@ const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, 'data', 'leagues.json');
+const HOST = '0.0.0.0';
+
+// Use /tmp on Railway (ephemeral but writable), local data/ dir otherwise
+const DATA_DIR = process.env.RAILWAY_ENVIRONMENT
+  ? '/tmp'
+  : path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'leagues.json');
 
 app.use(express.json());
 app.use(express.static(__dirname));
 
 // ========== DATA PERSISTENCE ==========
 
+// In-memory store — persisted to disk as backup
+let leaguesCache = null;
+
 function ensureDataDir() {
-  const dir = path.join(__dirname, 'data');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '{}');
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 function loadAllLeagues() {
+  if (leaguesCache) return leaguesCache;
   ensureDataDir();
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+    leaguesCache = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
   } catch {
-    return {};
+    leaguesCache = {};
   }
+  return leaguesCache;
 }
 
 function saveAllLeagues(data) {
-  ensureDataDir();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  leaguesCache = data;
+  try {
+    ensureDataDir();
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error('File write failed (using memory only):', e.message);
+  }
 }
 
 function getLeagueByCode(code) {
@@ -286,6 +300,12 @@ function calculateScore(predicted, actual) {
   if (diff <= 12) return 2;
   return 0;
 }
+
+// ========== HEALTH CHECK ==========
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: Date.now() });
+});
 
 // ========== API ROUTES ==========
 
@@ -662,15 +682,12 @@ function generate2026Bracket() {
 
 // ========== START ==========
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log('');
   console.log('  ╔══════════════════════════════════════╗');
   console.log('  ║   MARCH MADNESS WITH SKILL — 2026   ║');
   console.log('  ╠══════════════════════════════════════╣');
-  console.log(`  ║   Server running on port ${PORT}        ║`);
-  console.log(`  ║   http://localhost:${PORT}              ║`);
+  console.log(`  ║   Running on ${HOST}:${PORT}             ║`);
   console.log('  ╚══════════════════════════════════════╝');
-  console.log('');
-  console.log('  Share your network IP with friends so they can join!');
   console.log('');
 });
