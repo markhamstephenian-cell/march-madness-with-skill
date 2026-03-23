@@ -513,7 +513,8 @@ function renderJoinLeague() {
   return `${renderBackground()}
     <div class="hero fade-in" style="justify-content:flex-start; padding-top:6rem;">
       <div class="hero-basketball" style="width:80px;height:80px;">${basketballSVG(80)}</div>
-      <h1 style="font-size:2.5rem; margin-bottom:2rem;">JOIN A LEAGUE</h1>
+      <h1 style="font-size:2.5rem; margin-bottom:0.5rem;">JOIN A LEAGUE</h1>
+      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">New player? Join with a code. Returning? Enter your same name to get back in.</p>
       <div class="card" style="max-width:450px; width:100%; text-align:left;">
         <div class="form-group"><label>League Code</label>
           <input type="text" class="form-input" id="leagueCode" placeholder="XXXXXX" maxlength="6"
@@ -1099,14 +1100,20 @@ async function doJoinLeague() {
   try {
     const btn = document.getElementById('joinBtn');
     btn.disabled = true; btn.textContent = 'Joining...';
-    const { league, playerId } = await api('POST', `/league/${code}/join`, { playerName });
-    state.league = league;
-    state.playerId = playerId;
-    state.currentPlayer = league.players.find(p => p.id === playerId);
-    state.selectedTeam = null;
-    state.view = 'select-team';
+    const result = await api('POST', `/league/${code}/join`, { playerName });
+    state.league = result.league;
+    state.playerId = result.playerId;
+    state.currentPlayer = result.league.players.find(p => p.id === result.playerId);
     saveSession();
     startPolling();
+    if (result.rejoined && state.currentPlayer && state.currentPlayer.teamId) {
+      state.view = 'app';
+      state.activeTab = 'dashboard';
+      showToast('Welcome back!', 'success');
+    } else {
+      state.selectedTeam = null;
+      state.view = 'select-team';
+    }
     render();
   } catch (e) { showToast(e.message, 'error'); }
 }

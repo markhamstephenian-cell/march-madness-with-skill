@@ -357,8 +357,10 @@ app.post('/api/league/:code/join', (req, res) => {
   const league = getLeagueByCode(req.params.code);
   if (!league) return res.status(404).json({ error: 'League not found' });
 
-  if (league.players.some(p => p.name.toLowerCase() === playerName.toLowerCase())) {
-    return res.status(409).json({ error: 'Name already taken' });
+  // If name already exists, reconnect to that player (rejoin)
+  const existing = league.players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+  if (existing) {
+    return res.json({ league, playerId: existing.id, rejoined: true });
   }
 
   const playerId = Math.random().toString(36).substring(2, 8).toUpperCase();
