@@ -104,23 +104,64 @@ let state = {
   pollTimer: null,
 };
 
-// ========== SESSION (local only — just remembers which league/player you are) ==========
+// ========== SESSION (local only — remembers which leagues/players you are in) ==========
+
+function loadAllSessions() {
+  try {
+    const raw = localStorage.getItem('mm_sessions');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  // Migrate old single-session format
+  try {
+    const old = JSON.parse(localStorage.getItem('mm_session'));
+    if (old && old.code && old.playerId) {
+      const sessions = [{ code: old.code, playerId: old.playerId }];
+      localStorage.setItem('mm_sessions', JSON.stringify(sessions));
+      localStorage.removeItem('mm_session');
+      return sessions;
+    }
+  } catch {}
+  return [];
+}
 
 function saveSession() {
   if (state.league && state.playerId) {
-    localStorage.setItem('mm_session', JSON.stringify({
+    const sessions = loadAllSessions();
+    const entry = {
       code: state.league.code,
       playerId: state.playerId,
-    }));
+      playerName: state.currentPlayer ? state.currentPlayer.name : '',
+      leagueName: state.league.name,
+      teamId: state.currentPlayer ? state.currentPlayer.teamId : null,
+    };
+    const idx = sessions.findIndex(s => s.code === entry.code && s.playerId === entry.playerId);
+    if (idx >= 0) sessions[idx] = entry;
+    else sessions.push(entry);
+    localStorage.setItem('mm_sessions', JSON.stringify(sessions));
   }
 }
 
 function loadSession() {
-  try { return JSON.parse(localStorage.getItem('mm_session')); } catch { return null; }
+  const sessions = loadAllSessions();
+  return sessions.length > 0 ? sessions[0] : null;
 }
 
 function clearSession() {
-  localStorage.removeItem('mm_session');
+  if (state.league && state.playerId) {
+    removeSession(state.league.code, state.playerId);
+  } else {
+    localStorage.removeItem('mm_sessions');
+    localStorage.removeItem('mm_session');
+  }
+}
+
+function removeSession(code, playerId) {
+  let sessions = loadAllSessions();
+  sessions = sessions.filter(s => !(s.code === code && s.playerId === playerId));
+  localStorage.setItem('mm_sessions', JSON.stringify(sessions));
 }
 
 // ========== API HELPERS ==========
@@ -299,16 +340,52 @@ function render() {
 // ========== HOME ==========
 
 function renderHome() {
-  // Check for saved session to show "Welcome back"
-  const session = loadSession();
-  const welcomeBack = session ? `
-    <div class="card" style="max-width:400px; width:100%; margin-bottom:2rem; text-align:center; border-color:var(--success); padding:1.25rem;">
-      <div style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--success); letter-spacing:2px; margin-bottom:0.75rem;">WELCOME BACK</div>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1rem;">You have an active league. Jump back in!</p>
-      <button class="btn btn-primary btn-lg" style="width:100%;" onclick="rejoinSession()">Return to My League</button>
-    </div>
-    <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">— or start fresh —</div>
-  ` : '';
+  const sessions = loadAllSessions();
+
+  let yourGamesHtml = '';
+  if (sessions.length > 0) {
+    let gameCards = '';
+    for (const s of sessions) {
+      const team = s.teamId ? findTeamByFullId(s.teamId) : null;
+      const teamLabel = team ? `(${team.seed}) ${team.name}` : 'No team yet';
+      const teamBadge = team
+        ? `<span style="background:rgba(227,82,5,0.15); color:var(--ball-orange); font-size:0.75rem; font-weight:700;
+                padding:0.2rem 0.6rem; border-radius:6px;">${teamLabel}</span>`
+        : `<span style="background:rgba(255,255,255,0.05); color:var(--text-muted); font-size:0.75rem;
+                padding:0.2rem 0.6rem; border-radius:6px;">No team yet</span>`;
+      gameCards += `
+        <div class="card game-session-card" style="cursor:pointer; padding:1rem 1.25rem; margin-bottom:0.75rem; transition:border-color 0.2s, transform 0.15s;"
+             onclick="rejoinSpecificSession('${escapeHtml(s.code)}','${escapeHtml(s.playerId)}')"
+             onmouseenter="this.style.borderColor='var(--ball-orange)';this.style.transform='translateY(-2px)';"
+             onmouseleave="this.style.borderColor='';this.style.transform='';">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+              <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:2px; color:var(--text-primary);">
+                ${escapeHtml(s.leagueName || 'League')}</div>
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.35rem;">
+                <span style="font-size:0.8rem; color:var(--text-secondary);">Playing as <strong style="color:var(--text-primary);">${escapeHtml(s.playerName || 'Player')}</strong></span>
+                <span style="color:var(--text-muted);">&bull;</span>
+                ${teamBadge}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span style="font-family:'Bebas Neue',sans-serif; font-size:0.9rem; letter-spacing:2px; color:var(--text-muted);
+                    background:rgba(255,255,255,0.05); padding:0.25rem 0.6rem; border-radius:6px;">${escapeHtml(s.code)}</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ball-orange)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>`;
+    }
+    yourGamesHtml = `
+      <div style="max-width:500px; width:100%; margin-bottom:2rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--success); letter-spacing:2px; text-align:center; margin-bottom:1rem;">
+          YOUR GAMES</div>
+        ${gameCards}
+      </div>
+      <div style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">— or start something new —</div>
+    `;
+  }
 
   return `${renderBackground()}
     <div class="hero fade-in">
@@ -320,7 +397,7 @@ function renderHome() {
            padding:0.75rem 1.5rem; margin-bottom:2rem; font-size:0.9rem; color:var(--ball-orange);">
         <strong>Multiplayer enabled</strong> — share your league code so friends can join from anywhere
       </div>
-      ${welcomeBack}
+      ${yourGamesHtml}
       <div class="btn-group">
         <button class="btn btn-primary btn-lg" onclick="navigate('create-league')">Create League</button>
         <button class="btn btn-secondary btn-lg" onclick="navigate('join-league')">Join League</button>
@@ -528,7 +605,7 @@ function renderAppShell() {
 
   return `${renderBackground()}
     <div class="app-header">
-      <div class="logo" onclick="switchTab('dashboard')">
+      <div class="logo" onclick="goHome()" title="Back to all games" style="cursor:pointer;">
         <span class="ball-icon">${miniBasketballSVG(24)}</span> MM WITH SKILL</div>
       <div class="nav-tabs">
         ${tabs.map(t => `<button class="nav-tab ${state.activeTab===t?'active':''}" onclick="switchTab('${t}')">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
@@ -992,6 +1069,7 @@ function renderAdmin() {
 
 function navigate(view) { state.view = view; render(); }
 function switchTab(tab) { state.activeTab = tab; render(); }
+function goHome() { stopPolling(); state.view = 'home'; state.league = null; state.playerId = null; state.currentPlayer = null; render(); }
 
 async function doCreateLeague() {
   const leagueName = document.getElementById('leagueName').value.trim();
@@ -1179,22 +1257,33 @@ function shareInvite() {
 async function rejoinSession() {
   const session = loadSession();
   if (!session) { showToast('No saved session found', 'error'); return; }
+  await rejoinSpecificSession(session.code, session.playerId);
+}
+
+async function rejoinSpecificSession(code, playerId) {
   try {
-    const league = await api('GET', `/league/${session.code}`);
+    const league = await api('GET', `/league/${code}`);
     state.league = league;
-    state.playerId = session.playerId;
-    state.currentPlayer = league.players.find(p => p.id === session.playerId);
+    state.playerId = playerId;
+    state.currentPlayer = league.players.find(p => p.id === playerId);
     if (state.currentPlayer) {
-      state.view = 'app';
-      state.activeTab = 'dashboard';
+      if (!state.currentPlayer.teamId) {
+        state.view = 'select-team';
+        state.selectedTeam = null;
+      } else {
+        state.view = 'app';
+        state.activeTab = 'dashboard';
+      }
+      saveSession(); // update cached info (team, names)
       startPolling();
       render();
     } else {
-      clearSession();
+      removeSession(code, playerId);
       showToast('Session expired. Please join again.', 'error');
+      render();
     }
   } catch {
-    clearSession();
+    removeSession(code, playerId);
     showToast('League not found. It may have been reset.', 'error');
     render();
   }
@@ -1238,22 +1327,9 @@ function createParticles() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   createParticles();
-  const session = loadSession();
-  if (session) {
-    try {
-      const league = await api('GET', `/league/${session.code}`);
-      state.league = league;
-      state.playerId = session.playerId;
-      state.currentPlayer = league.players.find(p => p.id === session.playerId);
-      if (state.currentPlayer) {
-        state.view = 'app';
-        state.activeTab = 'dashboard';
-        startPolling();
-        render();
-        return;
-      }
-    } catch { clearSession(); }
-  }
+  // Always show home page — user picks which game to rejoin
+  // Migrate old single-session format on first load
+  loadAllSessions();
   state.view = 'home';
   render();
 });
