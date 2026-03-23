@@ -140,7 +140,18 @@ async function refreshLeague() {
     const league = await api('GET', `/league/${state.league.code}`);
     state.league = league;
     state.currentPlayer = league.players.find(p => p.id === state.playerId);
+    // Preserve chat input value and focus across re-render
+    const chatInput = document.getElementById('chatInput');
+    const savedText = chatInput ? chatInput.value : '';
+    const wasFocused = chatInput && document.activeElement === chatInput;
     render();
+    if (savedText || wasFocused) {
+      const newInput = document.getElementById('chatInput');
+      if (newInput) {
+        newInput.value = savedText;
+        if (wasFocused) newInput.focus();
+      }
+    }
   } catch (e) {
     console.error('Refresh failed:', e);
   }
