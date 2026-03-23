@@ -13,10 +13,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
-// Use /tmp on Railway (ephemeral but writable), local data/ dir otherwise
-const DATA_DIR = process.env.RAILWAY_ENVIRONMENT
-  ? '/tmp'
-  : path.join(__dirname, 'data');
+// Use Railway volume if available, fallback to local data/ dir
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  || (process.env.RAILWAY_ENVIRONMENT ? '/data' : path.join(__dirname, 'data'));
 const DATA_FILE = path.join(DATA_DIR, 'leagues.json');
 
 app.use(express.json());
