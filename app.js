@@ -265,8 +265,34 @@ function getPlayerRank(playerId) {
   return sorted.findIndex(p => p.id === playerId) + 1;
 }
 
+function getPlayerPredictRound(player) {
+  const league = state.league;
+  const roundIdx = league.currentRound;
+  const roundId = ROUNDS[roundIdx].id;
+  const matchups = league.bracket[roundId] || [];
+  const matchup = matchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+
+  // If player's current game isn't done yet, predict for current round
+  if (!matchup || !matchup.result) return roundIdx;
+
+  // If player's team lost, no prediction
+  if (matchup.result.winner !== player.teamId) return null;
+
+  // Player's team won — check for next round matchup
+  const nextRoundIdx = roundIdx + 1;
+  if (nextRoundIdx >= ROUNDS.length) return null;
+
+  const nextRoundId = ROUNDS[nextRoundIdx].id;
+  const nextMatchups = league.bracket[nextRoundId] || [];
+  const nextMatchup = nextMatchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+
+  return nextMatchup ? nextRoundIdx : null;
+}
+
 function hasPredictedCurrentRound(player) {
-  return (player.predictions || []).some(p => p.round === state.league.currentRound);
+  const predictRound = getPlayerPredictRound(player);
+  if (predictRound === null) return true; // No game to predict — treat as done
+  return (player.predictions || []).some(p => p.round === predictRound);
 }
 
 function getAliveTeams() {
@@ -712,19 +738,36 @@ function renderDashboard() {
   if (player.eliminated) {
     html += `<div class="eliminated-overlay"><h2>YOUR TEAM WAS ELIMINATED</h2>
       <p>${team.name} went down in the ${ROUNDS[player.eliminatedRound].name}. You can still watch the leaderboard and chat!</p></div>`;
-  } else if (gamePlayed) {
-    html += `<div class="card" style="text-align:center; border-color:var(--success); padding:1.5rem;">
-      <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--success); letter-spacing:2px;">${team.name} ADVANCED!</div>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">Waiting for remaining games to finish.</p></div>`;
-  } else if (!predicted) {
-    html += `<div class="card" style="text-align:center; border-color:var(--ball-orange); padding:2rem;">
-      <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--ball-orange); letter-spacing:2px; margin-bottom:0.75rem;">PREDICTIONS OPEN</div>
-      <p style="color:var(--text-secondary); margin-bottom:1.25rem;">Make your prediction for ${team.name}'s next game!</p>
-      <button class="btn btn-primary" onclick="switchTab('predict')">Make Prediction</button></div>`;
   } else {
-    html += `<div class="card" style="text-align:center; padding:1.5rem;">
-      <div style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--success); letter-spacing:2px;">PREDICTION LOCKED IN</div>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">Waiting for the game to finish...</p></div>`;
+    const predictRound = getPlayerPredictRound(player);
+    const predictedNext = predictRound !== null && (player.predictions || []).some(p => p.round === predictRound);
+
+    if (gamePlayed && predictRound !== null && !predictedNext) {
+      const nextRound = ROUNDS[predictRound];
+      html += `<div class="card" style="text-align:center; border-color:var(--ball-orange); padding:2rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--success); letter-spacing:2px; margin-bottom:0.5rem;">${team.name} ADVANCED!</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--ball-orange); letter-spacing:2px; margin-bottom:0.75rem;">PREDICTIONS OPEN</div>
+        <p style="color:var(--text-secondary); margin-bottom:1.25rem;">Make your prediction for the ${nextRound.name}!</p>
+        <button class="btn btn-primary" onclick="switchTab('predict')">Make Prediction</button></div>`;
+    } else if (gamePlayed && predictRound !== null && predictedNext) {
+      html += `<div class="card" style="text-align:center; padding:1.5rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--success); letter-spacing:2px;">${team.name} ADVANCED!</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--success); letter-spacing:2px; margin-top:0.5rem;">PREDICTION LOCKED IN</div>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">Waiting for the ${ROUNDS[predictRound].name} game...</p></div>`;
+    } else if (gamePlayed) {
+      html += `<div class="card" style="text-align:center; border-color:var(--success); padding:1.5rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--success); letter-spacing:2px;">${team.name} ADVANCED!</div>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">Waiting for the next matchup to be determined.</p></div>`;
+    } else if (!predicted) {
+      html += `<div class="card" style="text-align:center; border-color:var(--ball-orange); padding:2rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--ball-orange); letter-spacing:2px; margin-bottom:0.75rem;">PREDICTIONS OPEN</div>
+        <p style="color:var(--text-secondary); margin-bottom:1.25rem;">Make your prediction for ${team.name}'s next game!</p>
+        <button class="btn btn-primary" onclick="switchTab('predict')">Make Prediction</button></div>`;
+    } else {
+      html += `<div class="card" style="text-align:center; padding:1.5rem;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--success); letter-spacing:2px;">PREDICTION LOCKED IN</div>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-top:0.5rem;">Waiting for the game to finish...</p></div>`;
+    }
   }
 
   return html;
@@ -788,7 +831,7 @@ function renderBracketView() {
 
 function renderPrediction() {
   const player = state.currentPlayer, league = state.league;
-  const roundIdx = league.currentRound, round = ROUNDS[roundIdx];
+  let roundIdx = league.currentRound, round = ROUNDS[roundIdx];
   const team = findTeamByFullId(player.teamId);
 
   if (player.eliminated) {
@@ -796,8 +839,29 @@ function renderPrediction() {
       <p>Your team was knocked out. Follow on the Bracket, Leaderboard, and Chat tabs.</p></div>`;
   }
 
-  const matchups = league.bracket[round.id] || [];
+  let matchups = league.bracket[round.id] || [];
   let matchup = matchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+
+  // If current round game is done and player advanced, look for next round matchup
+  if (matchup && matchup.result && matchup.result.winner === player.teamId) {
+    const nextRoundIdx = roundIdx + 1;
+    if (nextRoundIdx < ROUNDS.length) {
+      const nextRound = ROUNDS[nextRoundIdx];
+      const nextMatchups = league.bracket[nextRound.id] || [];
+      const nextMatchup = nextMatchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+      if (nextMatchup) {
+        roundIdx = nextRoundIdx;
+        round = nextRound;
+        matchup = nextMatchup;
+      } else {
+        return `<div class="card" style="text-align:center; padding:2rem;">
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--success); letter-spacing:2px;">
+            ${team.name} ADVANCED!</div>
+          <p style="color:var(--text-muted); margin-top:0.5rem;">Waiting for the next matchup to be determined...</p></div>`;
+      }
+    }
+  }
+
   if (!matchup) return `<div class="empty-state"><p>Matchups for ${round.name} haven't been set yet.</p></div>`;
 
   const oppId = matchup.team1 === player.teamId ? matchup.team2 : matchup.team1;

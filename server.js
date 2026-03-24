@@ -54,7 +54,12 @@ function saveAllLeagues(data) {
 function getLeagueByCode(code) {
   const all = loadAllLeagues();
   for (const id in all) {
-    if (all[id].code === code.toUpperCase()) return all[id];
+    if (all[id].code === code.toUpperCase()) {
+      if (ensureNextRoundMatchups(all[id])) {
+        saveAllLeagues(all);
+      }
+      return all[id];
+    }
   }
   return null;
 }
@@ -401,14 +406,17 @@ app.post('/api/league/:code/predict', (req, res) => {
   const player = league.players.find(p => p.id === playerId);
   if (!player) return res.status(404).json({ error: 'Player not found' });
 
+  const predictRound = getPlayerPredictRound(league, player);
+  if (predictRound === null) return res.status(400).json({ error: 'No game available for prediction' });
+
   // Check if already predicted this round
-  if ((player.predictions || []).some(p => p.round === league.currentRound)) {
+  if ((player.predictions || []).some(p => p.round === predictRound)) {
     return res.status(409).json({ error: 'Already predicted this round' });
   }
 
   if (!player.predictions) player.predictions = [];
   player.predictions.push({
-    round: league.currentRound, total, spread, willAdvance, timestamp: Date.now(),
+    round: predictRound, total, spread, willAdvance, timestamp: Date.now(),
   });
 
   saveLeague(league);
@@ -530,21 +538,14 @@ app.post('/api/league/:code/advance', (req, res) => {
   const sorted = [...league.players].sort((a, b) => getTotalPlayerScoreServer(b) - getTotalPlayerScoreServer(a));
   sorted.forEach((p, i) => p.previousRank = i + 1);
 
-  // Generate next round matchups
   const nextRoundIdx = league.currentRound + 1;
   if (nextRoundIdx >= ROUNDS.length) {
     return res.status(400).json({ error: 'Tournament is over' });
   }
 
-  const winners = matchups.filter(m => m.result).map(m => m.result.winner);
-  const nextMatchups = [];
-  for (let i = 0; i < winners.length; i += 2) {
-    if (i + 1 < winners.length) {
-      nextMatchups.push({ team1: winners[i], team2: winners[i + 1], result: null });
-    }
-  }
+  // Ensure all next round matchups exist (some may already have been generated progressively)
+  ensureNextRoundMatchups(league);
 
-  league.bracket[ROUNDS[nextRoundIdx].id] = nextMatchups;
   league.currentRound = nextRoundIdx;
 
   saveLeague(league);
@@ -609,6 +610,80 @@ function getTotalPlayerScoreServer(player) {
     total += (r.totalScore || 0) + (r.spreadScore || 0) + (r.advanceBonus || 0);
   }
   return total;
+}
+
+// ========== NEXT-ROUND MATCHUP GENERATION ==========
+
+// Progressively generate next-round matchups as pairs of games complete.
+// Returns true if any new matchups were created.
+function ensureNextRoundMatchups(league) {
+  const ROUNDS = [
+    { id: 'first-four' }, { id: 'round-1' }, { id: 'round-2' },
+    { id: 'sweet-16' }, { id: 'elite-8' }, { id: 'final-4' }, { id: 'championship' },
+  ];
+
+  const roundId = ROUNDS[league.currentRound].id;
+  const matchups = league.bracket[roundId] || [];
+  const nextRoundIdx = league.currentRound + 1;
+  if (nextRoundIdx >= ROUNDS.length) return false;
+
+  const nextRoundId = ROUNDS[nextRoundIdx].id;
+  if (!league.bracket[nextRoundId]) league.bracket[nextRoundId] = [];
+  const nextMatchups = league.bracket[nextRoundId];
+  let changed = false;
+
+  for (let i = 0; i < matchups.length; i += 2) {
+    if (i + 1 >= matchups.length) break;
+    if (!matchups[i].result || !matchups[i + 1].result) continue;
+
+    const winner1 = matchups[i].result.winner;
+    const winner2 = matchups[i + 1].result.winner;
+
+    const exists = nextMatchups.some(m =>
+      (m.team1 === winner1 && m.team2 === winner2) ||
+      (m.team1 === winner2 && m.team2 === winner1)
+    );
+
+    if (!exists) {
+      nextMatchups.push({
+        team1: winner1, team2: winner2,
+        region: matchups[i].region || null,
+        result: null,
+      });
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
+// Determine which round a player should predict for.
+// Returns the round index, or null if no prediction is possible.
+function getPlayerPredictRound(league, player) {
+  const ROUNDS = [
+    { id: 'first-four' }, { id: 'round-1' }, { id: 'round-2' },
+    { id: 'sweet-16' }, { id: 'elite-8' }, { id: 'final-4' }, { id: 'championship' },
+  ];
+
+  const roundId = ROUNDS[league.currentRound].id;
+  const matchups = league.bracket[roundId] || [];
+  const currentMatchup = matchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+
+  // If player's current game isn't done yet, predict for current round
+  if (!currentMatchup || !currentMatchup.result) return league.currentRound;
+
+  // If player's team lost, they're eliminated
+  if (currentMatchup.result.winner !== player.teamId) return null;
+
+  // Player's team won — check for next round matchup
+  const nextRoundIdx = league.currentRound + 1;
+  if (nextRoundIdx >= ROUNDS.length) return null;
+
+  const nextRoundId = ROUNDS[nextRoundIdx].id;
+  const nextMatchups = league.bracket[nextRoundId] || [];
+  const nextMatchup = nextMatchups.find(m => m.team1 === player.teamId || m.team2 === player.teamId);
+
+  return nextMatchup ? nextRoundIdx : null;
 }
 
 // ========== BRACKET GENERATOR ==========
