@@ -102,6 +102,7 @@ let state = {
   _willAdvance: true,
   loading: false,
   pollTimer: null,
+  joinLeagueData: null,
 };
 
 // ========== SESSION (local only — remembers which leagues/players you are in) ==========
@@ -536,20 +537,71 @@ function renderCreateLeague() {
 }
 
 function renderJoinLeague() {
+  // Step 1: enter code
+  if (!state.joinLeagueData) {
+    return `${renderBackground()}
+      <div class="hero fade-in" style="justify-content:flex-start; padding-top:6rem;">
+        <div class="hero-basketball" style="width:80px;height:80px;">${basketballSVG(80)}</div>
+        <h1 style="font-size:2.5rem; margin-bottom:0.5rem;">JOIN A LEAGUE</h1>
+        <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Enter your league code to get started.</p>
+        <div class="card" style="max-width:450px; width:100%; text-align:left;">
+          <div class="form-group"><label>League Code</label>
+            <input type="text" class="form-input" id="leagueCode" placeholder="XXXXXX" maxlength="6"
+                   style="text-transform:uppercase; text-align:center; font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:4px;"></div>
+          <div class="btn-group" style="justify-content:flex-start; margin-top:1.5rem;">
+            <button class="btn btn-primary" id="lookupBtn" onclick="doLookupLeague()">Find League</button>
+            <button class="btn btn-secondary" onclick="navigate('home')">Back</button>
+          </div>
+        </div>
+      </div><div class="toast-container" id="toasts"></div>`;
+  }
+
+  // Step 2: show league players + new player option
+  const data = state.joinLeagueData;
+  const team = (tid) => { if (!tid) return ''; const t = findTeamByFullId(tid); return t ? `(${t.seed}) ${t.name}` : ''; };
+
+  let playersHtml = '';
+  for (const p of data.players) {
+    const teamLabel = p.teamId ? team(p.teamId) : 'No team yet';
+    const teamBadge = p.teamId
+      ? `<span style="background:rgba(227,82,5,0.15); color:var(--ball-orange); font-size:0.75rem; font-weight:700;
+              padding:0.2rem 0.6rem; border-radius:6px;">${escapeHtml(teamLabel)}</span>`
+      : `<span style="background:rgba(255,255,255,0.05); color:var(--text-muted); font-size:0.75rem;
+              padding:0.2rem 0.6rem; border-radius:6px;">No team yet</span>`;
+    playersHtml += `
+      <div class="card" style="cursor:pointer; padding:0.75rem 1rem; margin-bottom:0.5rem; transition:border-color 0.2s, transform 0.15s;"
+           onclick="doRejoinAsPlayer('${escapeHtml(data.code)}','${escapeHtml(p.id)}')"
+           onmouseenter="this.style.borderColor='var(--success)';this.style.transform='translateY(-2px)';"
+           onmouseleave="this.style.borderColor='';this.style.transform='';">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700; color:var(--text-primary);">${escapeHtml(p.name)}</div>
+            <div style="margin-top:0.25rem;">${teamBadge}</div>
+          </div>
+          <div style="color:var(--success); font-size:0.8rem; font-weight:700;">REJOIN &rarr;</div>
+        </div>
+      </div>`;
+  }
+
   return `${renderBackground()}
     <div class="hero fade-in" style="justify-content:flex-start; padding-top:6rem;">
       <div class="hero-basketball" style="width:80px;height:80px;">${basketballSVG(80)}</div>
-      <h1 style="font-size:2.5rem; margin-bottom:0.5rem;">JOIN A LEAGUE</h1>
-      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">New player? Join with a code. Returning? Enter your same name to get back in.</p>
-      <div class="card" style="max-width:450px; width:100%; text-align:left;">
-        <div class="form-group"><label>League Code</label>
-          <input type="text" class="form-input" id="leagueCode" placeholder="XXXXXX" maxlength="6"
-                 style="text-transform:uppercase; text-align:center; font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:4px;"></div>
-        <div class="form-group"><label>Your Name</label>
-          <input type="text" class="form-input" id="joinPlayerName" placeholder="Your display name" maxlength="20"></div>
-        <div class="btn-group" style="justify-content:flex-start; margin-top:1.5rem;">
-          <button class="btn btn-primary" id="joinBtn" onclick="doJoinLeague()">Join & Pick Team</button>
-          <button class="btn btn-secondary" onclick="navigate('home')">Back</button>
+      <h1 style="font-size:2.5rem; margin-bottom:0.5rem;">${escapeHtml(data.leagueName)}</h1>
+      <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Returning player? Tap your name below. New player? Enter your name at the bottom.</p>
+      <div style="max-width:450px; width:100%;">
+        ${data.players.length > 0 ? `
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--text-secondary); letter-spacing:2px; margin-bottom:0.75rem;">
+            EXISTING PLAYERS</div>
+          ${playersHtml}
+        ` : ''}
+        <div style="color:var(--text-muted); font-size:0.85rem; text-align:center; margin:1.25rem 0;">— or join as a new player —</div>
+        <div class="card" style="text-align:left;">
+          <div class="form-group"><label>Your Name</label>
+            <input type="text" class="form-input" id="joinPlayerName" placeholder="Your display name" maxlength="20"></div>
+          <div class="btn-group" style="justify-content:flex-start; margin-top:1rem;">
+            <button class="btn btn-primary" id="joinBtn" onclick="doJoinLeague()">Join & Pick Team</button>
+            <button class="btn btn-secondary" onclick="state.joinLeagueData=null; navigate('join-league')">Back</button>
+          </div>
         </div>
       </div>
     </div><div class="toast-container" id="toasts"></div>`;
@@ -1134,7 +1186,7 @@ function renderAdmin() {
 
 function navigate(view) { state.view = view; render(); }
 function switchTab(tab) { state.activeTab = tab; render(); }
-function goHome() { stopPolling(); state.view = 'home'; state.league = null; state.playerId = null; state.currentPlayer = null; render(); }
+function goHome() { stopPolling(); state.view = 'home'; state.league = null; state.playerId = null; state.currentPlayer = null; state.joinLeagueData = null; render(); }
 
 async function doCreateLeague() {
   const leagueName = document.getElementById('leagueName').value.trim();
@@ -1156,10 +1208,52 @@ async function doCreateLeague() {
   } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function doJoinLeague() {
+async function doLookupLeague() {
   const code = document.getElementById('leagueCode').value.trim().toUpperCase();
+  if (!code) { showToast('Enter a league code', 'error'); return; }
+
+  // Check localStorage first — auto-rejoin if we have a session for this code
+  const sessions = loadAllSessions();
+  const existingSession = sessions.find(s => s.code === code);
+  if (existingSession) {
+    await rejoinSpecificSession(existingSession.code, existingSession.playerId);
+    return;
+  }
+
+  try {
+    const btn = document.getElementById('lookupBtn');
+    btn.disabled = true; btn.textContent = 'Looking up...';
+    const data = await api('GET', `/league/${code}/players`);
+    state.joinLeagueData = { ...data, code };
+    render();
+  } catch (e) { showToast(e.message, 'error'); render(); }
+}
+
+async function doRejoinAsPlayer(code, playerId) {
+  try {
+    const result = await api('POST', `/league/${code}/rejoin`, { playerId });
+    state.league = result.league;
+    state.playerId = result.playerId;
+    state.currentPlayer = result.league.players.find(p => p.id === result.playerId);
+    state.joinLeagueData = null;
+    saveSession();
+    startPolling();
+    if (state.currentPlayer && state.currentPlayer.teamId) {
+      state.view = 'app';
+      state.activeTab = 'dashboard';
+      showToast('Welcome back!', 'success');
+    } else {
+      state.selectedTeam = null;
+      state.view = 'select-team';
+    }
+    render();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function doJoinLeague() {
+  const code = state.joinLeagueData ? state.joinLeagueData.code : '';
   const playerName = document.getElementById('joinPlayerName').value.trim();
-  if (!code || !playerName) { showToast('Fill in both fields', 'error'); return; }
+  if (!code || !playerName) { showToast('Enter your name', 'error'); return; }
 
   try {
     const btn = document.getElementById('joinBtn');
@@ -1168,6 +1262,7 @@ async function doJoinLeague() {
     state.league = result.league;
     state.playerId = result.playerId;
     state.currentPlayer = result.league.players.find(p => p.id === result.playerId);
+    state.joinLeagueData = null;
     saveSession();
     startPolling();
     if (result.rejoined && state.currentPlayer && state.currentPlayer.teamId) {

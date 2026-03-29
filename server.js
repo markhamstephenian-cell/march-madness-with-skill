@@ -311,6 +311,80 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: Date.now() });
 });
 
+// ========== ONE-TIME DATA MIGRATION ==========
+// Fixes the "Second Try" league (T87FWN): reorders sweet-16, regenerates elite-8,
+// clears Ian's round-4 prediction (made against wrong opponent).
+// Safe to call multiple times — only runs if the data still needs fixing.
+
+app.post('/api/migrate/fix-bracket', (req, res) => {
+  const all = loadAllLeagues();
+  let league = null;
+  for (const id in all) {
+    if (all[id].code === 'T87FWN') { league = all[id]; break; }
+  }
+  if (!league) return res.status(404).json({ error: 'League T87FWN not found' });
+
+  const sweet16 = league.bracket['sweet-16'] || [];
+  if (sweet16.length !== 8) return res.status(400).json({ error: 'Unexpected sweet-16 size: ' + sweet16.length });
+
+  // Build correct sweet-16 order from round-2 bracket positions
+  const round2 = league.bracket['round-2'] || [];
+  const existingByKey = {};
+  for (const m of sweet16) {
+    const key = [m.team1, m.team2].sort().join('|');
+    existingByKey[key] = m;
+  }
+
+  const correctedSweet16 = [];
+  for (let i = 0; i < round2.length; i += 2) {
+    if (i + 1 >= round2.length) break;
+    if (!round2[i].result || !round2[i + 1].result) continue;
+    const w1 = round2[i].result.winner;
+    const w2 = round2[i + 1].result.winner;
+    const key = [w1, w2].sort().join('|');
+    const existing = existingByKey[key];
+    if (existing) {
+      correctedSweet16.push(existing);
+    } else {
+      correctedSweet16.push({ team1: w1, team2: w2, region: round2[i].region || null, result: null });
+    }
+  }
+
+  // Check if sweet-16 actually changed
+  const sweet16Changed = JSON.stringify(correctedSweet16) !== JSON.stringify(sweet16);
+
+  // Regenerate elite-8 from corrected sweet-16
+  const correctedElite8 = [];
+  for (let i = 0; i < correctedSweet16.length; i += 2) {
+    if (i + 1 >= correctedSweet16.length) break;
+    if (!correctedSweet16[i].result || !correctedSweet16[i + 1].result) continue;
+    const w1 = correctedSweet16[i].result.winner;
+    const w2 = correctedSweet16[i + 1].result.winner;
+    correctedElite8.push({ team1: w1, team2: w2, region: correctedSweet16[i].region || null, result: null });
+  }
+
+  // Clear any round-4 predictions (made against wrong opponents)
+  const clearedPredictions = [];
+  for (const player of league.players) {
+    const before = (player.predictions || []).length;
+    player.predictions = (player.predictions || []).filter(p => p.round !== 4);
+    if (player.predictions.length < before) {
+      clearedPredictions.push(player.name);
+    }
+  }
+
+  league.bracket['sweet-16'] = correctedSweet16;
+  league.bracket['elite-8'] = correctedElite8;
+  saveAllLeagues(all);
+
+  res.json({
+    success: true,
+    sweet16Reordered: sweet16Changed,
+    elite8: correctedElite8.map(m => m.team1 + ' vs ' + m.team2),
+    clearedPredictions,
+  });
+});
+
 // ========== API ROUTES ==========
 
 // Get league by code
@@ -351,6 +425,34 @@ app.post('/api/league', (req, res) => {
 
   saveLeague(league);
   res.json({ league, playerId });
+});
+
+// Look up league players (for rejoin UI)
+app.get('/api/league/:code/players', (req, res) => {
+  const league = getLeagueByCode(req.params.code);
+  if (!league) return res.status(404).json({ error: 'League not found' });
+  res.json({
+    leagueName: league.name,
+    players: league.players.map(p => ({
+      id: p.id,
+      name: p.name,
+      teamId: p.teamId,
+    })),
+  });
+});
+
+// Rejoin league by playerId (no name needed)
+app.post('/api/league/:code/rejoin', (req, res) => {
+  const { playerId } = req.body;
+  if (!playerId) return res.status(400).json({ error: 'Missing playerId' });
+
+  const league = getLeagueByCode(req.params.code);
+  if (!league) return res.status(404).json({ error: 'League not found' });
+
+  const player = league.players.find(p => p.id === playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found in this league' });
+
+  return res.json({ league, playerId: player.id, rejoined: true });
 });
 
 // Join league
@@ -615,7 +717,9 @@ function getTotalPlayerScoreServer(player) {
 // ========== NEXT-ROUND MATCHUP GENERATION ==========
 
 // Progressively generate next-round matchups as pairs of games complete.
-// Returns true if any new matchups were created.
+// Matchups are placed in correct bracket position order (position = floor(i/2))
+// so that later rounds always pair the right teams regardless of completion order.
+// Returns true if any new matchups were created or reordered.
 function ensureNextRoundMatchups(league) {
   const ROUNDS = [
     { id: 'first-four' }, { id: 'round-1' }, { id: 'round-2' },
@@ -628,30 +732,41 @@ function ensureNextRoundMatchups(league) {
   if (nextRoundIdx >= ROUNDS.length) return false;
 
   const nextRoundId = ROUNDS[nextRoundIdx].id;
-  if (!league.bracket[nextRoundId]) league.bracket[nextRoundId] = [];
-  const nextMatchups = league.bracket[nextRoundId];
-  let changed = false;
+  const existingNext = league.bracket[nextRoundId] || [];
 
+  // Index existing matchups by their team pair to preserve results
+  const existingByKey = {};
+  for (const m of existingNext) {
+    if (m) {
+      const key = [m.team1, m.team2].sort().join('|');
+      existingByKey[key] = m;
+    }
+  }
+
+  // Build next round in correct bracket order: pair (i, i+1) → position floor(i/2)
+  const newNext = [];
   for (let i = 0; i < matchups.length; i += 2) {
     if (i + 1 >= matchups.length) break;
     if (!matchups[i].result || !matchups[i + 1].result) continue;
 
     const winner1 = matchups[i].result.winner;
     const winner2 = matchups[i + 1].result.winner;
+    const key = [winner1, winner2].sort().join('|');
 
-    const exists = nextMatchups.some(m =>
-      (m.team1 === winner1 && m.team2 === winner2) ||
-      (m.team1 === winner2 && m.team2 === winner1)
-    );
-
-    if (!exists) {
-      nextMatchups.push({
+    if (existingByKey[key]) {
+      newNext.push(existingByKey[key]);
+    } else {
+      newNext.push({
         team1: winner1, team2: winner2,
         region: matchups[i].region || null,
         result: null,
       });
-      changed = true;
     }
+  }
+
+  const changed = JSON.stringify(newNext) !== JSON.stringify(existingNext);
+  if (changed) {
+    league.bracket[nextRoundId] = newNext;
   }
 
   return changed;
